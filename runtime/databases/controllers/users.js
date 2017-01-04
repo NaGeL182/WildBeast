@@ -58,11 +58,40 @@ exports.isKnown = function (user) {
   })
 }
 
+exports.addCount = function (user) {
+  return new Promise(function ( resolve, reject) {
+    getDatabaseDocument(user).then((d) => {
+      if (d.messageCount) {
+        d.messageCount++;
+        r.db('Discord').table('Users').get(user.id).update(d).run().then(() => {
+          resolve()
+        }).catch((e) => {
+          reject(e)
+        })
+      } else {
+        d.messageCount = 1
+        r.db('Discord').table('Users').get(user.id).update(d).run().then(() => {
+          resolve()
+        }).catch((e) => {
+          reject(e)
+        })
+      }
+    }).catch(() => {
+      initialize(user).then(() => {
+        resolve()
+      }).catch(() => {
+        reject()
+      })
+    })
+  })
+}
+
 function initialize (user) {
   return new Promise(function (resolve, reject) {
     var doc = {
       id: user.id,
-      names: [user.username]
+      names: [user.username],
+      messageCount : 1
     }
     r.db('Discord').table('Users').insert(doc).run().then(() => {
       resolve()
@@ -71,6 +100,7 @@ function initialize (user) {
     })
   })
 }
+
 
 function getDatabaseDocument (user) {
   return new Promise(function (resolve, reject) {
