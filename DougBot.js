@@ -66,6 +66,7 @@ bot.Dispatcher.on(Event.GATEWAY_READY, function () {
 bot.Dispatcher.on(Event.MESSAGE_CREATE, function (c) {
   if (!bot.connected) return
   datacontrol.users.isKnown(c.message.author)
+  datacontrol.users.addCount(c.message.author)
   var prefix
   var loggingGuild = {}
   for (var k in c.message.guild) {
@@ -87,6 +88,7 @@ bot.Dispatcher.on(Event.MESSAGE_CREATE, function (c) {
       suffix = suffix.slice(1, suffix.length).join(' ')
     } else if (c.message.content.indexOf(bot.User.mention) === 0) {
       cmd = c.message.content.substr(bot.User.mention.length + 1).split(' ')[0].toLowerCase()
+      if (cmd == 'hello') cmd = ''
       suffix = c.message.content.substr(bot.User.mention.length).split(' ')
       suffix = suffix.slice(2, suffix.length).join(' ')
     } else if (c.message.content.indexOf(bot.User.nickMention) === 0) {
@@ -260,7 +262,9 @@ bot.Dispatcher.on(Event.MESSAGE_CREATE, function (c) {
             })
           })
         }
-      }
+      } 
+    } else if (c.message.content.indexOf(bot.User.mention) === 0) {
+      commands['cleverbot'].fn(c.message, suffix, bot)
     }
   }).catch(function (e) {
     if (e === 'No database') {
@@ -343,6 +347,9 @@ bot.Dispatcher.on(Event.GATEWAY_HELLO, (gatewayInfo) => {
     gatewayTrace: gatewayInfo.data._trace
   })
 })
+
+bot.Dispatcher.on(Event.PRESENCE_UPDATE, function(e) {
+ })
 
 bot.Dispatcher.on(Event.DISCONNECTED, function (e) {
   Logger.error('Disconnected from the Discord gateway: ' + e.error)
