@@ -98,7 +98,7 @@ Commands.eval = {
     if (msg.author.id === bot.User.id) return // To statisfy our styleguide :P
     var util = require('util')
     try {
-      var returned = eval(suffix)
+      var returned = eval(suffix) // eslint-disable-line no-eval
       var str = util.inspect(returned, {
         depth: 1
       })
@@ -145,7 +145,7 @@ Commands.plaineval = {
     var evalfin = []
     try {
       evalfin.push('```xl')
-      evalfin.push(eval(suffix))
+      evalfin.push(eval(suffix)) // eslint-disable-line no-eval
       evalfin.push('```')
     } catch (e) {
       evalfin = []
@@ -163,7 +163,7 @@ Commands.globalban = {
   help: 'Deny a user from using the bot globally.',
   usage: '<ban/unban/status> <userid>',
   level: 'master',
-  fn: function(msg, suffix) {
+  fn: function (msg, suffix) {
     var users = require('../databases/controllers/users.js')
     var what = suffix.toLowerCase().split(' ')[0]
     var who = suffix.split(' ')[1] !== undefined ? suffix.split(' ')[1] : what
@@ -230,7 +230,7 @@ Commands.customize = {
     if (suffix[0].length === 0) {
       var datacontrol = require('../datacontrol')
       datacontrol.customize.prefix(msg).then((prefix) => {
-        msg.channel.sendMessage(`No option entered! Check ${prefix ? prefix : config.settings.prefix}customize help to see the various options you can set.`)
+        msg.channel.sendMessage(`No option entered! Check ${prefix !== false ? prefix : config.settings.prefix}customize help to see the various options you can set.`)
       })
     } else if (suffix[0] === 'help') {
       c.helpHandle(msg)
@@ -391,7 +391,6 @@ Commands.rankup = {
   }
 }
 
-
 Commands.setnsfw = {
   name: 'setnsfw',
   help: 'This changes if the channel allows NSFW commands.',
@@ -432,26 +431,32 @@ Commands.hello = {
 
 Commands.setstatus = {
   name: 'setstatus',
-  help: 'This will change my current status to something else.',
-  usage: '<online / idle / twitch url> [playing status]',
+  help: 'Change my playing status on Discord to something else or pass nothing to clear the status!',
+  usage: '<online / idle / dnd / invisible / twitch url> [playing status]',
   level: 'master',
   fn: function (msg, suffix, bot) {
     var first = suffix.split(' ')
-    if (/^http/.test(first[0])) {
-      bot.User.setStatus(null, {
-        type: 1,
-        name: suffix.substring(first[0].length + 1),
-        url: first[0]
-      })
-      msg.channel.sendMessage(`Set status to streaming with message ${suffix.substring(first[0].length + 1)}`)
+    if (!suffix) {
+      bot.User.setStatus('online', null)
+      msg.channel.sendMessage(`Cleared status.`)
     } else {
-      if (['online', 'idle'].indexOf(first[0]) > -1) {
+      if (/^https?/.test(first[0])) {
+        bot.User.setStatus(null, {
+          type: 1,
+          name: (first[1] ? suffix.substring(first[0].length + 1) : null),
+          url: first[0]
+        })
+        msg.channel.sendMessage(`Set status to streaming with message ${suffix.substring(first[0].length + 1)}`)
+      } else if (['online', 'idle', 'dnd', 'invisible'].indexOf(first[0]) > -1) {
         bot.User.setStatus(first[0], {
-          name: suffix.substring(first[0].length + 1)
+          name: (first[1] ? suffix.substring(first[0].length + 1) : null)
         })
         msg.channel.sendMessage(`Set status to ${first[0]} with message ${suffix.substring(first[0].length + 1)}`)
+      } else if (suffix.substring(first[0].length + 1).length < 1) {
+        msg.reply('Can only be `online`, `idle`, `dnd` or `invisible`!')
       } else {
-        msg.reply('Can only be `online` or `idle`')
+        bot.User.setStatus('online', null)
+        msg.channel.sendMessage(`Cleared status.`)
       }
     }
   }
@@ -493,7 +498,7 @@ Commands['server-info'] = {
       }
       msg.channel.sendMessage('', false, embed)
     } else {
-      msg.channel.sendMessage("You can't do that in a DM, dummy!.")
+      msg.channel.sendMessage("You can't do that in a DM, dummy!")
     }
   }
 }

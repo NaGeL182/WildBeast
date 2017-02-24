@@ -17,7 +17,7 @@ Commands.music = {
 Commands.volume = {
   name: 'volume',
   help: "I'll change my volume or return the current volume if you don't provide a number!",
-  usage: "<nothing/number>",
+  usage: '<nothing/number>',
   aliases: ['vol'],
   noDM: true,
   level: 1,
@@ -105,7 +105,7 @@ Commands.playlist = {
       } else {
         v.fetchList(msg).then((r) => {
           var arr = []
-          arr.push('Now playing: **' + r.info[0] + '** \n')
+          arr.push('Now playing: **' + r.info[0] + '** Requested by *' + r.requester[0] + '* \n')
           for (var i = 1; i < r.info.length; i++) {
             arr.push((i) + '. **' + r.info[i] + '** Requested by ' + r.requester[i])
             if (i === 9) {

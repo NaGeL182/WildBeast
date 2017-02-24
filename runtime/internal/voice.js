@@ -207,6 +207,7 @@ function next (msg, suffix, bot) {
           })
         }
         encoder.once('end', () => {
+          if (list[msg.guild.id].info.length === 0) return
           msg.channel.sendMessage('**' + list[msg.guild.id].info[0] + '** has ended!').then((m) => {
             if (Config.settings.autodeletemsg) {
               setTimeout(() => {
@@ -296,11 +297,11 @@ exports.voteSkip = function (msg, bot) {
       list[msg.guild.id].skips.users.push(msg.author.id)
       list[msg.guild.id].skips.count++
       if (list[msg.guild.id].skips.count >= count) {
-          msg.channel.sendMessage('Voteskip passed, next song coming up!')
-          exports.skip(msg, null, bot)
-        } else {
-          msg.reply(`Voteskip registered, ${count - list[msg.guild.id].skips.count} more votes needed for the vote to pass.`)
-        }
+        msg.channel.sendMessage('Voteskip passed, next song coming up!')
+        exports.skip(msg, null, bot)
+      } else {
+        msg.reply(`Voteskip registered, ${count - list[msg.guild.id].skips.count} more votes needed for the vote to pass.`)
+      }
     }
   }
 }
@@ -467,7 +468,8 @@ exports.request = function (msg, suffix, bot) {
         }
       }).catch((e) => {
         Logger.error(e)
-        msg.channel.sendMessage("I couldn't add that to the playlist.").then((m) => {
+        var error = (e.error.split('ERROR:')[1].length !== 2) ? e.error.split('ERROR:')[1] : e.error.split('WARNING:')[1]
+        msg.channel.sendMessage("I couldn't add that to the playlist, error returned:" + error.replace(Config.api_keys.google, '👀').split('Traceback')[0].split('please report')[0]).then((m) => {
           if (Config.settings.autodeletemsg) {
             setTimeout(() => {
               m.delete().catch((e) => Logger.error(e))
@@ -555,16 +557,16 @@ function fetch (v, msg, stats) {
           }
         }
       } else if (err) {
-        bugsnag.notify(err)
+        bugsnag.notify(err.message)
         y++
         if (y > x) {
           return reject({
-            error: err,
+            error: err.message,
             done: true
           })
         } else {
           return reject({
-            error: err
+            error: err.message
           })
         }
       }
