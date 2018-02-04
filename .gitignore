@@ -36,7 +36,6 @@ node_modules
 .idea/
 
 # RethinkDB Database
-rethinkdb_data 
+
+rethinkdb_data/
 /.project
-
-
